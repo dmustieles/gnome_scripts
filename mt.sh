@@ -13,7 +13,7 @@ cd $HOME/mt-files
 
 echo -e "Downloading PO files..."
 
-$WGET_OPTS $DL_URL/$RELEASE/ui.tar.gz -O core-ui.tar.gz; tar -zxf core-ui.tar
+$WGET_OPTS $DL_URL/$RELEASE/ui.tar.gz -O core-ui.tar.gz; tar -zxf core-ui.tar.gz
 $WGET_OPTS $DL_URL/$RELEASE/doc.tar.gz -O core-doc.tar.gz; tar -zxf core-doc.tar.gz; rm core-doc.tar.gz
 
 $WGET_OPTS $DL_URL/external-deps/ui.tar.gz -O external-ui.tar.gz; tar -zxf external-ui.tar.gz; rm external-ui.tar.gz
