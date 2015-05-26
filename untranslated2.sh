@@ -23,7 +23,7 @@
 # Script para descargar todos los archivos PO sin traducir de los distintos conjuntos de módulos de Damned Lies
 ##
 
-RELEASE="gnome-3-16"
+RELEASE="gnome-3-18"
 FOLDER=$HOME/po-files
 DL_URL="https://l10n.gnome.org/languages/es"
 WGET_OPTS="wget --no-check-certificate -q"

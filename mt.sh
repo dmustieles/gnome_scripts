@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RELEASE="gnome-3-16"
+RELEASE="gnome-3-18"
 DL_URL="https://l10n.gnome.org/languages/es"
 WGET_OPTS="wget --no-check-certificate -q"
 
