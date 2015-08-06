@@ -20,7 +20,7 @@
 
 
 # Carpeta donde estan los archivos .po listos para subir a Git
-GTTK_UPLOAD="/home/leo/po-files/subir/"
+GTTK_UPLOAD="/home/leo/po-files/subir"
 
 # Carpeta donde tenemos los clones de git
 GTTK_GIT_CLONES="/home/leo/gnome"
@@ -390,6 +390,10 @@ function UploadModule {
 			then
 				echo -e "Error en push: \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
 				GTTK_ERROR="TRUE"
+			else
+				# Si no hay error en el push, puedo mover el PO original a la papelera
+				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $HOME/.local/share/Trash/files/
+				
 			fi
 		else
 			echo -e "Error en commit: \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
@@ -403,8 +407,8 @@ function UploadModule {
 			git branch -D $rama >/dev/null 2>&1
 		fi
 	fi
-	cd $GTTK_GIT_CLONES
 
+	cd $GTTK_GIT_CLONES
 }
 
 
@@ -435,7 +439,7 @@ function CommitPO {
 
 	echo
 
-	if [ $GTTK_ERROR="TRUE" ]
+	if [ $GTTK_ERROR == "TRUE" ]
 	then
 		echo -e "Se han encontrado errores al subir las traducciones. Consulte el informe de error en /tmp/gttk_error.log\n"
 	fi
