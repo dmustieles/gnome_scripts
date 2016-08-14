@@ -10,11 +10,12 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, see <http://www.gnu.org/licenses/>
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
 
@@ -24,6 +25,9 @@ GTTK_GIMP_UPLOAD="/home/leo/po-files/subir/gimp"
 
 # Carpeta donde tenemos los clones de git
 GTTK_GIT_CLONES="/home/leo/gnome"
+
+# Carpeta de papelera, para mover los archivo Po ya subido
+GTTK_TRASH="$HOME/.local/share/Trash/files/"
 
 # Idioma del traductor
 GTTK_LANG="es"
@@ -35,22 +39,13 @@ GTTK_XML_CHECK="FALSE"
 GTTK_ERROR="FALSE"
 
 # Variables con nombres de módulos especiales para la documentación
-GTTK_GNOME_DEVEL_DOCS="accessibility-devel-guide hig integration-guide optimization-guide platform-demos platform-overview"
+GTTK_GNOME_DEVEL_DOCS="accessibility-devel-guide hig integration-guide optimization-guide platform-demos platform-overview programming-guidelines"
 GTTK_GNOME_APPLETS="battstat char-palette stickynotes trashapplet accessx-status invest-applet multiload drivemount geyes cpufreq charpick gweather mixer command-line"
 GTTK_GNOME_SYSTEM_TOOLS="network users shares services time"
 GTTK_GNOME_PANEL="clock fish"
 
 
-#########################################################
-#							#
-#  Funciones para implementar cada una de las opciones	#
-#							#
-#########################################################
-
-
-##
 # Actualizar todos los módulos
-##
 function UpdateAll {
 
 	for i in `ls $GTTK_GIT_CLONES`
@@ -66,28 +61,46 @@ function UpdateAll {
 }
 
 
-##
-# Cambiar todos los módulos a la rama «master»
-##
-function ChangeToMaster {
+# Documentación de Gimp (gimp-help-2)
+function CommitGimpHelp {
 
-	for i in `ls $GTTK_GIT_CLONES`
-	do
-		if [ -d $i ]
-		then
-			cd $GTTK_GIT_CLONES/$i
-			echo
-			echo -e "Actualizando:\t \e[1;32m $i \e[0m"
-			git checkout master > /dev/null 2>&1
-			cd ..
-		fi
-	done
+	if [ ! -d $GTTK_GIMP_UPLOAD ]
+	then
+		echo -e "No hay traducciones de GIMP para subir\n"
+		exit 0
+	fi
+
+        cd $GTTK_GIT_CLONES/gimp-help-2
+	git pull > /dev/null 2>&1
+
+        for i in `ls $GTTK_GIMP_UPLOAD`
+        do
+                unset GIMP_SUBFOLDER
+                unset GIMP_SUBNAME
+
+                echo $i | grep '~' > /dev/null 2>&1
+
+                if [ $? -eq 0 ]
+                then
+                        GIMP_SUBFOLDER=`echo $i | awk -F "~" {'print $1'}`
+                else
+                        GIMP_MODULE=`echo $i | awk -F "." {'print $1'}`
+                fi
+
+                if [ ! -z $GIMP_SUBFOLDER ]
+                then
+                        GIMP_SUBNAME=`echo $i | awk -F "~" {'print $2'} | awk -F "." {'print $1'}`
+                        GIMP_MODULE="$GIMP_SUBFOLDER/$GIMP_SUBNAME"
+                fi
+                echo copiando $i a $GTTK_GIT_CLONES/gimp-help-2/po/es/$GIMP_MODULE.po
+                cp $GTTK_GIMP_UPLOAD/$i $GTTK_GIT_CLONES/gimp-help-2/po/es/$GIMP_MODULE.po
+        done
+
+        git commit -a -m "Updated Spanish translation"
+        git push
 }
 
-
-##
 # Cambiar todos los módulos a la rama «master», eliminando el resto de ramas
-##
 function ChangeToMasterClean {
 
 	for i in `ls $GTTK_GIT_CLONES`
@@ -121,9 +134,7 @@ function ChangeToMasterClean {
 }
 
 
-##
 # Función auxiliar para seleccionar la carpeta del módulo. Distingue entre IGU y documentación, así como los casos especiales.
-##
 function SelectFolders {
 
 	nombre=`echo $i|awk -F "." {'print $1'}|uniq`
@@ -150,8 +161,6 @@ function SelectFolders {
 		fi
 
 		# Si no existe el módulo, lo clono.
-		# NOTA: esto debe hacerse aquí para no perder la comprobación posterior de si hay varias carpetas de ayuda.
-		# No es lo ideal, pero de momento se debe dejar así
 		if [ ! -d $modulo_help ]
 		then
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
@@ -171,10 +180,7 @@ function SelectFolders {
 
 		if [ -d $modulo_help ]
 		then
-			##
 			# Si hay varias carpetas, se aborta el proceso, por seguridad.
-			# NOTA: esto hace que no se puedan subir traducciones de gimp-help
-			##
 
 			# Variable auxiliar para definir el patrón que se debe excluir al contar los archivos PO
 			GTTK_PATTERN="po/$GTTK_LANG.po"
@@ -199,29 +205,24 @@ function SelectFolders {
 				return
 			fi
 		fi	
-	else # No tiene la coletilla "-help" en el nombre. Si no es un archivo de la interfaz, es de los casos especiales de documentación
+	else 
+	# No tiene la coletilla "-help" en el nombre. Si no es un archivo de la interfaz, es de los casos especiales de documentación
 
-		##
 		# Lo primero es suponer que es un archivo de la IGU. Por lo tanto, indico que la carpeta es la del nombre del módulo, y luego verifico si es 
 		# de los casos especiales de la documentación.
 		#
 		# La variable $nombre viene del bucle de la función CommitPO
-		##
 
 		PO_FOLDER=$nombre/po
 
-		##
 		# Verifico si el módulo es gtk+-properties, ya que aún siendo de la IGU, tiene una carpeta especial
-		##
 		if [ $nombre == "gtk+-properties" ]
                 then
                         PO_FOLDER="gtk+/po-properties"
                         return
                 fi
 
-		##
 		# Verifico si el módulo es gnome-web-www, ya que tiene dos submódulos: «static» y «dynamic»
-		##
 		if [ $nombre == "static" ]
 		then
 			PO_FOLDER="gnome-web-www/translations/static"
@@ -275,10 +276,7 @@ function SelectFolders {
 }
 
 
-##
 # Función para seleccionar la rama correspondiente al módulo
-##
-
 function SelectBranch {
 
 	git pull > /dev/null 2>&1
@@ -298,10 +296,7 @@ function SelectBranch {
 }
 
 
-##
 # Función auxiliar para subir archivos .PO a git (interfaz y documentación). Incluye control de errores.
-##
-
 function UploadModule {
 
 	MODULE_FOLDER=$1
@@ -392,7 +387,7 @@ function UploadModule {
 				GTTK_ERROR="TRUE"
 			else
 				# Si no hay error en el push, puedo mover el PO original a la papelera
-				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $HOME/.local/share/Trash/files/
+				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $GTTK_TRASH
 				
 			fi
 		else
@@ -412,9 +407,7 @@ function UploadModule {
 }
 
 
-##
 # Función para verificar si existe el archivo de log de errores de gttk y eliminarlo si existe, para evitar arrastrar errores de anteriores ejecuciones
-##
 function CheckErrorLog {
 	if [ -f /tmp/gttk_error.log ]
 	then
@@ -423,10 +416,8 @@ function CheckErrorLog {
 }
 
 
-##
 # Función para subir el archivo al repositorio. Primero llama a SelectFolders para averiguar en qué carpeta está el módulo, y luego llama
 # a UploadModule para hacer el commit y el push del archivo en git.
-##
 function CommitPO {
 	CheckErrorLog
 
@@ -446,16 +437,11 @@ function CommitPO {
 }
 
 
-
-#########################################################
-#							#
-#	Comienzo del programa principal			#
-#							#
 #########################################################
 
 echo -e "\n1. Actualizar todos los módulos descargados\n"
-echo -e "\n2. Cambiar todos los módulos a la rama «master»\n"
-echo -e "\n3. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
+echo -e "\n2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
+echo -e "\n3. Subir traducciones de Gimp Help\n"
 echo -e "\n4. Subir traducciones (IGU y documentación) al repositorio\n"
 read -p "Opción " OPCION
 echo
@@ -468,12 +454,12 @@ case $OPCION in
 
 	# Cambiar todos los módulos a la rama «master»
 	2 )
-		ChangeToMaster	
+		ChangeToMasterClean
 	;;
 
-	# Cambiar todos los módulos a la rama «master», eliminando las ramas antiguas
+	# Subir traducciones de la documentación de GIMP
 	3 )
-		ChangeToMasterClean
+		CommitGimpHelp
 	;;
 
 	# Subir archivos .PO de la interfaz (GUI) al repositorio
@@ -481,4 +467,3 @@ case $OPCION in
 		CommitPO
 	;;
 esac
-
