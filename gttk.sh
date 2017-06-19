@@ -421,7 +421,7 @@ function CheckErrorLog {
 function CommitPO {
 	CheckErrorLog
 
-	for i in `ls $GTTK_UPLOAD/*.po`
+	for i in `ls $GTTK_UPLOAD`
 	do
 		SelectFolders
 
