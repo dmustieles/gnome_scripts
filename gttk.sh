@@ -39,6 +39,7 @@ GTTK_XML_CHECK="FALSE"
 GTTK_ERROR="FALSE"
 
 # Variables con nombres de módulos especiales para la documentación
+GTTK_GNOME_USER_DOCS="gnome-help system-admin-guide"
 GTTK_GNOME_DEVEL_DOCS="accessibility-devel-guide hig integration-guide optimization-guide platform-demos platform-overview programming-guidelines"
 GTTK_GNOME_APPLETS="battstat char-palette stickynotes trashapplet accessx-status invest-applet multiload drivemount geyes cpufreq charpick gweather mixer command-line"
 GTTK_GNOME_SYSTEM_TOOLS="network users shares services time"
@@ -235,6 +236,16 @@ function SelectFolders {
 				return
 			fi
  		fi
+
+
+		for modulo_user_docs in $GTTK_GNOME_USER_DOCS
+		do
+			if [ $modulo_user_docs == $nombre ]
+			then
+				PO_FOLDER="gnome-user-docs/$modulo_user_docs/es"
+				return
+			fi
+		done
 
 		for modulo_devel_docs in $GTTK_GNOME_DEVEL_DOCS
 		do
