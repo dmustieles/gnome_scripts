@@ -20,11 +20,11 @@
 
 
 # Carpeta donde estan los archivos .po listos para subir a Git
-GTTK_UPLOAD="/home/leo/po-files/subir"
-GTTK_GIMP_UPLOAD="/home/leo/po-files/subir/gimp"
+GTTK_UPLOAD="$HOME/Descargas/po-files/subir"
+GTTK_GIMP_UPLOAD="$HOME/Descargas/po-files/subir/gimp"
 
 # Carpeta donde tenemos los clones de git
-GTTK_GIT_CLONES="/home/leo/gnome"
+GTTK_GIT_CLONES="$HOME/gnome"
 
 # Carpeta de papelera, para mover los archivo Po ya subido
 GTTK_TRASH="$HOME/.local/share/Trash/files/"
@@ -418,19 +418,13 @@ function UploadModule {
 }
 
 
-# Función para verificar si existe el archivo de log de errores de gttk y eliminarlo si existe, para evitar arrastrar errores de anteriores ejecuciones
-function CheckErrorLog {
+# Función para subir el archivo al repositorio. Primero llama a SelectFolders para averiguar en qué carpeta está el módulo, y luego llama
+# a UploadModule para hacer el commit y el push del archivo en git.
+function CommitPO {
 	if [ -f /tmp/gttk_error.log ]
 	then
 		rm -f /tmp/gttk_error.log
 	fi
-}
-
-
-# Función para subir el archivo al repositorio. Primero llama a SelectFolders para averiguar en qué carpeta está el módulo, y luego llama
-# a UploadModule para hacer el commit y el push del archivo en git.
-function CommitPO {
-	CheckErrorLog
 
 	for i in `ls $GTTK_UPLOAD`
 	do
