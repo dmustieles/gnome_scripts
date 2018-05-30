@@ -166,7 +166,8 @@ function SelectFolders {
 		then
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
 
-			git clone ssh://dmustieles@git.gnome.org/git/$modulo_help >/dev/null 2>&1
+			#git clone ssh://dmustieles@git.gnome.org/git/$modulo_help >/dev/null 2>&1
+			git clone git@gitlab.gnome.org:GNOME/$modulo_help >/dev/null 2>&1
 
 			if [ $? -ne 0 ]
 			then
@@ -321,7 +322,8 @@ function UploadModule {
 
 	if [ $? -ne 0 ]
 	then
-		git clone ssh://dmustieles@git.gnome.org/git/$MODULE_NAME > /dev/null 2>&1
+		#git clone ssh://dmustieles@git.gnome.org/git/$MODULE_NAME > /dev/null 2>&1
+		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME > /dev/null 2>&1
 
 		if [ $? -ne 0 ]
 		then
