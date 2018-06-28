@@ -19,18 +19,19 @@
 #
 
 
+# Idioma del traductor
+GTTK_LANG="es"
+
 # Carpeta donde estan los archivos .po listos para subir a Git
 GTTK_UPLOAD="$HOME/Descargas/po-files/subir"
 GTTK_GIMP_UPLOAD="$HOME/Descargas/po-files/subir/gimp"
 
 # Carpeta donde tenemos los clones de git
 GTTK_GIT_CLONES="$HOME/gnome"
+GTTK_GIMP_HELP_FOLDER="$GTTK_GIT_CLONES/gimp-help/po/$GTTK_LANG"
 
 # Carpeta de papelera, para mover los archivo Po ya subido
 GTTK_TRASH="$HOME/.local/share/Trash/files/"
-
-# Idioma del traductor
-GTTK_LANG="es"
 
 # Flag para comprobación de GTXML
 GTTK_XML_CHECK="FALSE"
@@ -62,7 +63,7 @@ function UpdateAll {
 }
 
 
-# Documentación de Gimp (gimp-help-2)
+# Documentación de Gimp (gimp-help)
 function CommitGimpHelp {
 
 	if [ ! -d $GTTK_GIMP_UPLOAD ]
@@ -71,34 +72,69 @@ function CommitGimpHelp {
 		exit 0
 	fi
 
-        cd $GTTK_GIT_CLONES/gimp-help-2
+        cd $GTTK_GIT_CLONES/gimp-help
+	echo -e "Actualizando:\t \e[1;32m GIMP - help \e[0m"
 	git pull > /dev/null 2>&1
 
         for i in `ls $GTTK_GIMP_UPLOAD`
         do
                 unset GIMP_SUBFOLDER
                 unset GIMP_SUBNAME
+                unset GIMP_MODULE
 
-                echo $i | grep '~' > /dev/null 2>&1
+                COUNT=`echo $i | grep -o '~' | wc -l`
 
-                if [ $? -eq 0 ]
-                then
-                        GIMP_SUBFOLDER=`echo $i | awk -F "~" {'print $1'}`
-                else
-                        GIMP_MODULE=`echo $i | awk -F "." {'print $1'}`
-                fi
+                case $COUNT in
+		0)
+			# En este caso no existe $GIMP_SUBFOLDER
 
-                if [ ! -z $GIMP_SUBFOLDER ]
-                then
-                        GIMP_SUBNAME=`echo $i | awk -F "~" {'print $2'} | awk -F "." {'print $1'}`
-                        GIMP_MODULE="$GIMP_SUBFOLDER/$GIMP_SUBNAME"
-                fi
-                echo copiando $i a $GTTK_GIT_CLONES/gimp-help-2/po/es/$GIMP_MODULE.po
-                cp $GTTK_GIMP_UPLOAD/$i $GTTK_GIT_CLONES/gimp-help-2/po/es/$GIMP_MODULE.po
-        done
+			GIMP_MODULE=`echo $i | awk -F "." {'print $1'}`
+			MODULE_PATH=$GTTK_GIMP_HELP_FOLDER/$GIMP_MODULE.po
+		;;
 
-        git commit -a -m "Updated Spanish translation"
-        git push
+                1)
+			GIMP_SUBFOLDER=`echo $i | awk -F "~" {'print $1'}`
+			GIMP_MODULE=`echo $i | awk -F "~" {'print $2'} | awk -F "." {'print $1'}`
+			MODULE_PATH=$GTTK_GIMP_HELP_FOLDER/$GIMP_SUBFOLDER/$GIMP_MODULE.po
+		;;
+
+		2)
+			GIMP_SUBFOLDER=`echo $i | awk -F "~" {'print $1"/"$2'}`
+			GIMP_MODULE=`echo $i | awk -F "~" {'print $3'} | awk -F "." {'print $1'}`
+			MODULE_PATH=$GTTK_GIMP_HELP_FOLDER/$GIMP_SUBFOLDER/$GIMP_MODULE.po
+		;;
+		esac
+                
+		diff $GTTK_GIMP_UPLOAD/$i $MODULE_PATH  > /dev/null 2>&1
+
+	        if [ $? -eq 0 ]
+        	then
+                	echo -e "Error en diff:\t \e[1;31m $GIMP_MODULE \e[0m\n" |tee -a /tmp/gttk_error.log
+	                GTTK_ERROR="TRUE"
+                	continue
+        	else
+			echo -e "\e[37m$GIMP_MODULE \e[0m\n"
+        	        mv $GTTK_GIMP_UPLOAD/$i $MODULE_PATH
+		fi
+	done
+
+        git commit -a -m "Updated Spanish translation" > /dev/null 2>&1
+
+	# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
+	if [ $? -eq 0 ]
+	then
+		echo -e "\e[37m$GIMP_MODULE \e[0m\n"
+		git push >/dev/null 2>&1
+
+		# Al hacer el push puede dar algún error.
+		if [ $? -ne 0 ]
+		then
+			echo -e "Error en push: \e[1;31m $GIMP_MODULE \e[0m\n" |tee -a /tmp/gttk_error.log
+			GTTK_ERROR="TRUE"
+	else
+		echo -e "Error en commit: \e[1;31m $GIMP_MODULE \e[0m\n" |tee -a /tmp/gttk_error.log
+		GTTK_ERROR="TRUE"
+	fi
 }
 
 # Cambiar todos los módulos a la rama «master», eliminando el resto de ramas
@@ -167,7 +203,7 @@ function SelectFolders {
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
 
 			#git clone ssh://dmustieles@git.gnome.org/git/$modulo_help >/dev/null 2>&1
-			git clone git@gitlab.gnome.org:GNOME/$modulo_help >/dev/null 2>&1
+			git clone git@gitlab.gnome.org:GNOME/$modulo_help.git >/dev/null 2>&1
 
 			if [ $? -ne 0 ]
 			then
@@ -323,7 +359,7 @@ function UploadModule {
 	if [ $? -ne 0 ]
 	then
 		#git clone ssh://dmustieles@git.gnome.org/git/$MODULE_NAME > /dev/null 2>&1
-		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME > /dev/null 2>&1
+		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME.git > /dev/null 2>&1
 
 		if [ $? -ne 0 ]
 		then
