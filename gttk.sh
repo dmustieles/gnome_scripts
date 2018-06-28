@@ -131,6 +131,7 @@ function CommitGimpHelp {
 		then
 			echo -e "Error en push: \e[1;31m $GIMP_MODULE \e[0m\n" |tee -a /tmp/gttk_error.log
 			GTTK_ERROR="TRUE"
+		fi
 	else
 		echo -e "Error en commit: \e[1;31m $GIMP_MODULE \e[0m\n" |tee -a /tmp/gttk_error.log
 		GTTK_ERROR="TRUE"
