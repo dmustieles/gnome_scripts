@@ -483,11 +483,12 @@ function CommitPO {
 
 #########################################################
 
-echo -e "\n1. Actualizar todos los módulos descargados\n"
-echo -e "\n2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
-echo -e "\n3. Subir traducciones de Gimp Help\n"
-echo -e "\n4. Subir traducciones (IGU y documentación) al repositorio\n"
-read -p "Opción " OPCION
+echo -e
+echo -e "1. Actualizar todos los módulos descargados\n"
+echo -e "2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
+echo -e "3. Subir traducciones de Gimp Help\n"
+echo -e "4. Subir traducciones (IGU y documentación) al repositorio\n"
+read -p "Opción: " OPCION
 echo
 
 case $OPCION in
