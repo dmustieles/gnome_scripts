@@ -202,9 +202,11 @@ function SelectFolders {
 		if [ ! -d $modulo_help ]
 		then
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
-			echo -e "\e[3m\e[36mClonando...\e[0m"
-
+			tput sc
+			printf "\e[3m\e[36mDescargando módulo...\e[0m"
 			git clone git@gitlab.gnome.org:GNOME/$modulo_help.git >/dev/null 2>&1
+			tput rc
+			tput el
 
 			if [ $? -ne 0 ]
 			then
@@ -359,8 +361,12 @@ function UploadModule {
 
 	if [ $? -ne 0 ]
 	then
-		echo -e "\e[3m\e[36mClonando...\e[0m"
+		#echo -e "\e[3m\e[36mDescargando módulo...\e[0m"
+		tput sc
+		printf "\e[3m\e[36mDescargando módulo...\e[0m"
 		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME.git > /dev/null 2>&1
+		tput rc
+		tput el
 
 		if [ $? -ne 0 ]
 		then
