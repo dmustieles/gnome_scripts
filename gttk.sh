@@ -205,11 +205,11 @@ function SelectFolders {
 			tput sc
 			printf "\e[3m\e[36mDescargando módulo...\e[0m"
 			git clone git@gitlab.gnome.org:GNOME/$modulo_help.git >/dev/null 2>&1
-			tput rc
-			tput el
 
 			if [ $? -ne 0 ]
 			then
+				tput rc
+				tput el
 				echo -e "Error en clone:\t \e[1;31m $modulo_help \e[0m" |tee -a /tmp/gttk_error.log
 				GTTK_ERROR="TRUE"
 				echo
@@ -217,6 +217,8 @@ function SelectFolders {
 				PO_FOLDER=""
 				return
 			fi
+			tput rc
+			tput el
 		fi
 
 		if [ -d $modulo_help ]
@@ -357,24 +359,23 @@ function UploadModule {
 	echo -e "Actualizando:\t \e[1;32m $MODULE_NAME \e[0m"
 
 	# Si no existe la carpeta del módulo, intento descargarla de git. Si no existe en git, devuelve un error y sale de la funcion
-	test -d $MODULE_FOLDER
-
-	if [ $? -ne 0 ]
+	if [ ! -d $MODULE_FOLDER ]
 	then
-		#echo -e "\e[3m\e[36mDescargando módulo...\e[0m"
 		tput sc
 		printf "\e[3m\e[36mDescargando módulo...\e[0m"
 		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME.git > /dev/null 2>&1
-		tput rc
-		tput el
 
 		if [ $? -ne 0 ]
 		then
+			tput rc
+			tput el
 			echo -e "Error en clone:\t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
 			GTTK_ERROR="TRUE"
 
 			return
 		fi
+		tput rc
+		tput el
 	fi
 
 	cd $MODULE_FOLDER
