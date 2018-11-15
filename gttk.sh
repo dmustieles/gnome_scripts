@@ -472,7 +472,7 @@ function CommitPO {
 		rm -f /tmp/gttk_error.log
 	fi
 
-	for i in `ls $GTTK_UPLOAD`
+	for i in `ls -p $GTTK_UPLOAD | grep -v /`
 	do
 		SelectFolders
 
