@@ -123,7 +123,6 @@ function CommitGimpHelp {
 	# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
 	if [ $? -eq 0 ]
 	then
-		echo -e "\e[37m$GIMP_MODULE \e[0m\n"
 		git push >/dev/null 2>&1
 
 		# Al hacer el push puede dar algún error.
