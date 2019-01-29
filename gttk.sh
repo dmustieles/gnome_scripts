@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2012 - 2016 Daniel Mustieles <daniel.mustieles@gmail.com>
+# Copyright (C) 2012 - 2019 Daniel Mustieles <daniel.mustieles@gmail.com>
 
 #
 # This program is free software; you can redistribute it and/or modify
@@ -355,7 +355,7 @@ function UploadModule {
 	MODULE_NAME=$2
 
 	# Primero actualizo el módulo, antes de hacer el push
-	echo -e "Actualizando:\t \e[1;32m $MODULE_NAME \e[0m"
+	echo -e "Actualizando:\t \e[1;32m $MODULE_NAME \e[0m(\e[37m$rama\e[0m)"
 
 	# Si no existe la carpeta del módulo, intento descargarla de git. Si no existe en git, devuelve un error y sale de la funcion
 	if [ ! -d $MODULE_FOLDER ]
@@ -433,7 +433,6 @@ function UploadModule {
 		# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
 		if [ $? -eq 0 ]
 		then
-			echo -e "Rama:\t\t \e[37m $rama \e[0m\n"
 			git push >/dev/null 2>&1
 
 			# Al hacer el push puede dar algún error.
