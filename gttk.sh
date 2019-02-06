@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2012 - 2016 Daniel Mustieles <daniel.mustieles@gmail.com>
+# Copyright (C) 2012 - 2019 Daniel Mustieles <daniel.mustieles@gmail.com>
 
 #
 # This program is free software; you can redistribute it and/or modify
