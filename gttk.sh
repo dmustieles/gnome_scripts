@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2012 - 2019 Daniel Mustieles <daniel.mustieles@gmail.com>
+# Copyright (C) 2012 - 2016 Daniel Mustieles <daniel.mustieles@gmail.com>
 
 #
 # This program is free software; you can redistribute it and/or modify
@@ -258,9 +258,9 @@ function SelectFolders {
 		PO_FOLDER=$nombre/po
 
 		# Verifico si el módulo es gtk+-properties, ya que aún siendo de la IGU, tiene una carpeta especial
-		if [ $nombre == "gtk+-properties" ]
+		if [ $nombre == "gtk-properties" ]
                 then
-                        PO_FOLDER="gtk+/po-properties"
+                        PO_FOLDER="gtk/po-properties"
                         return
                 fi
 
