@@ -24,7 +24,7 @@ GTTK_LANG="es"
 
 # Carpeta donde estan los archivos .po listos para subir a Git
 GTTK_UPLOAD="$HOME/Descargas/po-files/subir"
-GTTK_GIMP_UPLOAD="$HOME/Descargas/po-files/subir/gimp"
+GTTK_GIMP_UPLOAD="$HOME/Descargas/po-files/gimp"
 
 # Carpeta donde tenemos los clones de git
 GTTK_GIT_CLONES="$HOME/gnome"
@@ -66,14 +66,15 @@ function UpdateAll {
 # Documentación de Gimp (gimp-help)
 function CommitGimpHelp {
 
-	if [ ! -d $GTTK_GIMP_UPLOAD ]
+	# Entro por el menú pero no hay traducciones que subir
+	if [[ $OPCION -eq "3" && ! -f $GTTK_GIMP_UPLOAD/* ]]
 	then
-		echo -e "No hay traducciones de GIMP para subir\n"
+		echo -e "\n\e[0;31mNo hay traducciones de GIMP para subir\e[0m\n"
 		exit 0
 	fi
 
         cd $GTTK_GIT_CLONES/gimp-help
-	echo -e "Actualizando:\t \e[1;32m GIMP - help \e[0m"
+	echo -e "\nActualizando:\t \e[1;32m GIMP - help \e[0m"
 	git pull > /dev/null 2>&1
 
         for i in `ls $GTTK_GIMP_UPLOAD`
@@ -113,11 +114,12 @@ function CommitGimpHelp {
 	                GTTK_ERROR="TRUE"
                 	continue
         	else
-			echo -e "\e[37m$GIMP_MODULE \e[0m\n"
+			echo -e "\e[37m$GIMP_MODULE \e[0m"
         	        mv $GTTK_GIMP_UPLOAD/$i $MODULE_PATH
 		fi
 	done
 
+	git config user.email "daniel.mustieles@gmail.com"
         git commit -a -m "Updated Spanish translation" > /dev/null 2>&1
 
 	# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
@@ -174,6 +176,7 @@ function ChangeToMasterClean {
 # Función auxiliar para seleccionar la carpeta del módulo. Distingue entre IGU y documentación, así como los casos especiales.
 function SelectFolders {
 
+	cd $GTTK_GIT_CLONES
 	nombre=`echo $i|awk -F "." {'print $1'}|uniq`
 
 	rama=`echo $i|awk -F "." {'print $2'}|uniq`
@@ -351,6 +354,9 @@ function SelectBranch {
 # Función auxiliar para subir archivos .PO a git (interfaz y documentación). Incluye control de errores.
 function UploadModule {
 
+	unset MODULE_FOLDER
+	unset MODULE_NAME
+
 	MODULE_FOLDER=$1
 	MODULE_NAME=$2
 
@@ -427,6 +433,7 @@ function UploadModule {
 		# Compruebo si el archivo PO pasa el test msgfmt antes de hacer el commit, para evitar que el push pueda dar un error
 		cp $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $MODULE_FOLDER/$GTTK_LANG.po
 
+		git config user.email "daniel.mustieles@gmail.com"
 		git commit $GTTK_LANG.po -m "Updated Spanish translation" > /dev/null 2>&1
 #		head -n1 $MODULE_FOLDER/$GTTK_LANG.po
 
@@ -488,6 +495,7 @@ function CommitPO {
 
 #########################################################
 
+function gttk_menu {
 echo -e
 echo -e "1. Actualizar todos los módulos descargados\n"
 echo -e "2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
@@ -517,3 +525,44 @@ case $OPCION in
 		CommitPO
 	;;
 esac
+}
+
+function gttk_help {
+echo -e "\nModo de uso:"
+echo -e "\t./gttk.sh (sin argumentos): sube todos los archivos PO, incluídos los de Gimp-help"
+echo -e "\nArgumentos:\n"
+echo -e "\t\e[1;32m --menu\t\e[0m muestra el menú de opciones"
+echo -e "\t\e[1;32m --help\t\e[0m muestra este mensaje de ayuda\n"
+}
+
+#########################################################
+
+if [ $# -eq 0 ]
+then
+	if [ ! "$(ls -A $GTTK_GIMP_UPLOAD)" ] && [ ! "$(ls -A $GTTK_UPLOAD)" ]
+	then
+		echo -e "\nNo hay traducciones para subir\n"
+		exit 0
+	fi
+ 
+	if [ "$(ls -A $GTTK_GIMP_UPLOAD)" ]
+	then
+		CommitGimpHelp
+	fi
+
+	if [ "$(ls -A $GTTK_UPLOAD)" ]
+	then
+		CommitPO
+	fi
+else
+	case $1 in
+		--menu)
+			gttk_menu
+		;;
+
+		--help)
+			gttk_help
+		;;
+	esac
+
+fi
