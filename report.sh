@@ -21,6 +21,7 @@
 RELEASE="gnome-3-34"
 DL_URL="https://l10n.gnome.org/languages"
 WGET_OPTS="wget --no-check-certificate -q"
+REPORTS_DIR="gtxml-doc-reports"
 
 if [ $# -eq 0 ]
 then
@@ -29,18 +30,34 @@ else
 	LINGUAS=$@
 fi
 
+mkdir $REPORTS_DIR
+
 # Get all the documentation PO files from Damned-Lies, using languages with at least one string in DL
 for i in `echo $LINGUAS`
 do
+	BASE_DIR=$REPORTS_DIR/$i
 	echo -e "Downloading PO files for:\e[1;32m $i \e[0m"
-	mkdir -p $i/core $i/infrastructure $i/gimp $i/gnome-extras $i/gnome-extras-stable
+	mkdir -p $BASE_DIR/core $BASE_DIR/infrastructure $BASE_DIR/gimp $BASE_DIR/gnome-extras $BASE_DIR/gnome-extras-stable
 
-	$WGET_OPTS $DL_URL/$i/$RELEASE/doc.tar.gz -O $i/core/$i.tar.gz ; tar -zxf $i/core/$i.tar.gz -C $i/core ; rm $i/core/$i.tar.gz
-	$WGET_OPTS $DL_URL/$i/gnome-infrastructure/doc.tar.gz -O $i/infrastructure/infrastructure.tar.gz && tar -zxf $i/infrastructure/infrastructure.tar.gz -C $i/infrastructure && rm $i/infrastructure/infrastructure.tar.gz
-	$WGET_OPTS $DL_URL/$i/gnome-gimp/doc.tar.gz -O $i/gimp/gimp.tar.gz && tar -zxf $i/gimp/gimp.tar.gz -C $i/gimp && rm $i/gimp/gimp.tar.gz
-	$WGET_OPTS $DL_URL/$i/gnome-extras/doc.tar.gz -O $i/gnome-extras/extras.tar.gz && tar -zxf $i/gnome-extras/extras.tar.gz -C $i/gnome-extras && rm $i/gnome-extras/extras.tar.gz
+	$WGET_OPTS $DL_URL/$i/$RELEASE/doc.tar.gz -O $BASE_DIR/core/$i.tar.gz
+	tar -zxf $BASE_DIR/core/$i.tar.gz -C $BASE_DIR/core
+	rm $BASE_DIR/core/$i.tar.gz
 
-	$WGET_OPTS $DL_URL/$i/gnome-extras-stable/doc.tar.gz -O $i/gnome-extras-stable/gnome-extras-stable.tar.gz && tar -zxf $i/gnome-extras-stable/gnome-extras-stable.tar.gz -C $i/gnome-extras-stable && rm $i/gnome-extras-stable/gnome-extras-stable.tar.gz
+	$WGET_OPTS $DL_URL/$i/gnome-infrastructure/doc.tar.gz -O $BASE_DIR/infrastructure/infrastructure.tar.gz
+	tar -zxf $BASE_DIR/infrastructure/infrastructure.tar.gz -C $BASE_DIR/infrastructure
+	rm $BASE_DIR/infrastructure/infrastructure.tar.gz
+
+	$WGET_OPTS $DL_URL/$i/gnome-gimp/doc.tar.gz -O $BASE_DIR/gimp/gimp.tar.gz
+	tar -zxf $BASE_DIR/gimp/gimp.tar.gz -C $BASE_DIR/gimp
+	rm $BASE_DIR/gimp/gimp.tar.gz
+
+	$WGET_OPTS $DL_URL/$i/gnome-extras/doc.tar.gz -O $BASE_DIR/gnome-extras/extras.tar.gz
+	tar -zxf $BASE_DIR/gnome-extras/extras.tar.gz -C $BASE_DIR/gnome-extras
+	rm $BASE_DIR/gnome-extras/extras.tar.gz
+
+	$WGET_OPTS $DL_URL/$i/gnome-extras-stable/doc.tar.gz -O $BASE_DIR/gnome-extras-stable/gnome-extras-stable.tar.gz
+	tar -zxf $BASE_DIR/gnome-extras-stable/gnome-extras-stable.tar.gz -C $BASE_DIR/gnome-extras-stable
+	rm $BASE_DIR/gnome-extras-stable/gnome-extras-stable.tar.gz
 done
 
 
@@ -49,37 +66,42 @@ echo -e "\nGenerating report..."
 
 for lang in `echo $LINGUAS`
 do
-	# Remove POT files and folders with only POT files
-	find $lang -iname *.pot -exec rm {} \;
-	find $lang -type d -empty -exec rm -r {} \; >/dev/null 2>&1
+	BASE_DIR=$REPORTS_DIR/$lang
 
-	for moduleset in `ls $lang`
+	# Remove POT files and folders with only POT files
+	find $BASE_DIR -iname *.pot -exec rm {} \;
+	find $BASE_DIR -type d -empty -exec rm -r {} \; >/dev/null 2>&1
+
+	for moduleset in `ls $BASE_DIR`
 	do
-		gtxml $lang/$moduleset/*.po >> $lang/$moduleset-$lang.txt
+		gtxml $BASE_DIR/$moduleset/*.po >> $BASE_DIR/$moduleset-$lang.txt
 	done
 
-	rm -rf $lang/core $lang/infrastructure $lang/gimp $lang/gnome-extras $lang/gnome-extras-stable
+	rm -rf $BASE_DIR/core $BASE_DIR/infrastructure $BASE_DIR/gimp $BASE_DIR/gnome-extras $BASE_DIR/gnome-extras-stable
 done
 
 # Remove empty files/folders (language with no errors)
-find . -size 0 -exec rm {} \;
-find . -type d -empty -exec rm -r {} \; >/dev/null 2>&1
+find $REPORTS_DIR -size 0 -exec rm {} \;
+find $REPORTS_DIR -type d -empty -exec rm -r {} \; >/dev/null 2>&1
+
 
 # Pack all reports in a .tar.gz file, ready to send to i18n mail list
-for i in `ls -d */`
+for i in `ls gtxml-doc-reports`
 do
-	if [ -n `ls -A $i >/dev/null 2>&1` ]
+	if [ -n `ls -A $REPORTS_DIR/$i >/dev/null 2>&1` ]
 	then
-		tar -rf gtxml-doc-reports.tar $i
-		rm -rf $i
+		echo $i >> lang_list
 	else
 		rm -rf $i
 	fi
 done
 
-gzip gtxml-doc-reports.tar
 
-REP_LIST=`tar -tf gtxml-doc-reports.tar.gz |awk -F '/' {'print $1'} | uniq`
+tar zcf gtxml-doc-reports.tar.gz gtxml-doc-reports --exclude report.sh
+
+REP_LIST=`cat lang_list`
 
 echo -e "\nThis is the list of the affected languages:"
 echo -e "\e[1;31m$REP_LIST \e[0m\n"
+
+rm -rf gtxml-doc-reports lang_list
