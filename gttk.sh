@@ -46,6 +46,17 @@ GTTK_GNOME_APPLETS="battstat char-palette stickynotes trashapplet accessx-status
 GTTK_GNOME_SYSTEM_TOOLS="network users shares services time"
 GTTK_GNOME_PANEL="clock fish"
 
+function Check_Requirements {
+
+	GTTK_JQ=`command -v jq`
+	GTTK_CURL=`command -v curl`
+
+	if [ ! $GTTK_JQ ] || [ ! $GTTK_CURL ]
+	then
+		echo -e "\n\e[1;31mError\e[0m: comando no encontrado. Se necesitan los comandos \e[1;32mjq\e[0m y \e[1;32mcurl\e[0m para utilizar GTTK\n"
+		exit 1
+	fi
+}
 
 # Actualizar todos los módulos
 function UpdateAll {
@@ -206,7 +217,8 @@ function SelectFolders {
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
 			tput sc
 			printf "\e[3m\e[36mDescargando módulo...\e[0m"
-			git clone git@gitlab.gnome.org:GNOME/$modulo_help.git >/dev/null 2>&1
+			GTTK_GIT_URL=`curl -s "https://l10n.gnome.org/api/v1/modules/$MODULE_NAME" | jq -r '.vcs_root'`
+			git clone $GTTK_GIT_URL > /dev/null 2>&1
 
 			if [ $? -ne 0 ]
 			then
@@ -368,7 +380,8 @@ function UploadModule {
 	then
 		tput sc
 		printf "\e[3m\e[36mDescargando módulo...\e[0m"
-		git clone git@gitlab.gnome.org:GNOME/$MODULE_NAME.git > /dev/null 2>&1
+		GTTK_GIT_URL=`curl -s "https://l10n.gnome.org/api/v1/modules/$MODULE_NAME" | jq -r '.vcs_root'`
+		git clone $GTTK_GIT_URL > /dev/null 2>&1
 
 		if [ $? -ne 0 ]
 		then
@@ -536,6 +549,8 @@ echo -e "\t\e[1;32m --help\t\e[0m muestra este mensaje de ayuda\n"
 }
 
 #########################################################
+
+Check_Requirements
 
 if [ $# -eq 0 ]
 then
