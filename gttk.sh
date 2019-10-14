@@ -287,21 +287,6 @@ function SelectFolders {
                 fi
 
 
-		# Verifico si el módulo es gnome-web-www, ya que tiene dos submódulos: «static» y «dynamic»
-		if [ $nombre == "static" ]
-		then
-			PO_FOLDER="gnome-web-www/translations/static"
-			return
-		
-		else 
-			if [ $nombre == "dynamic" ]
-			then
-				PO_FOLDER="gnome-web-www/translations/dynamic"
-				return
-			fi
- 		fi
-
-
 		for modulo_user_docs in $GTTK_GNOME_USER_DOCS
 		do
 			if [ $modulo_user_docs == $nombre ]
