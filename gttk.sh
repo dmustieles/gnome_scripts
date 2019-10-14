@@ -279,6 +279,14 @@ function SelectFolders {
                         return
                 fi
 
+		# Ubicaciones de libgweather (po-locations)
+		if [ $nombre == "locations" ]
+                then
+                        PO_FOLDER="libgweather/po-locations"
+                        return
+                fi
+
+
 		# Verifico si el módulo es gnome-web-www, ya que tiene dos submódulos: «static» y «dynamic»
 		if [ $nombre == "static" ]
 		then
