@@ -5,7 +5,7 @@
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
+# the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -217,8 +217,8 @@ function SelectFolders {
 			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
 			tput sc
 			printf "\e[3m\e[36mDescargando módulo...\e[0m"
-			GTTK_GIT_URL=`curl -s "https://l10n.gnome.org/api/v1/modules/$MODULE_NAME" | jq -r '.vcs_root'`
-			git clone $GTTK_GIT_URL > /dev/null 2>&1
+			GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$modulo_help | jq -r .vcs_root`
+			git clone $GTTK_GIT_URL  > /dev/null 2>&1
 
 			if [ $? -ne 0 ]
 			then
@@ -373,7 +373,7 @@ function UploadModule {
 	then
 		tput sc
 		printf "\e[3m\e[36mDescargando módulo...\e[0m"
-		GTTK_GIT_URL=`curl -s "https://l10n.gnome.org/api/v1/modules/$MODULE_NAME" | jq -r '.vcs_root'`
+		GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$MODULE_NAME | jq -r .vcs_root`
 		git clone $GTTK_GIT_URL > /dev/null 2>&1
 
 		if [ $? -ne 0 ]
@@ -498,9 +498,6 @@ function CommitPO {
 	fi
 }
 
-
-#########################################################
-
 function gttk_menu {
 echo -e
 echo -e "1. Actualizar todos los módulos descargados\n"
@@ -541,7 +538,7 @@ echo -e "\t\e[1;32m --menu\t\e[0m muestra el menú de opciones"
 echo -e "\t\e[1;32m --help\t\e[0m muestra este mensaje de ayuda\n"
 }
 
-#########################################################
+#####################
 
 Check_Requirements
 
