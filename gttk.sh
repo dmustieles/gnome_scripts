@@ -406,9 +406,6 @@ function UploadModule {
 		# Compruebo el flag GTTK_XML_CHECK para saber si es un módulo de documentación, para revisar la sintaxis con gtxml.
 		# Genero un informe y lo dejo en la carpeta donde están los PO que subir
 
-		# Comprobación desactivada temporalmente para evitar problemas con la línea «translator-credits»
-		GTTK_XML_CHECK="FALSE"
-
 		if [ $GTTK_XML_CHECK == "TRUE" ]
 		then
 			gtxml $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po > $GTTK_UPLOAD/$MODULE_NAME-report.txt
