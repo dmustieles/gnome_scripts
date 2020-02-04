@@ -475,6 +475,7 @@ function UploadModule {
 # Función para subir el archivo al repositorio. Primero llama a SelectFolders para averiguar en qué carpeta está el módulo, y luego llama
 # a UploadModule para hacer el commit y el push del archivo en git.
 function CommitPO {
+
 	if [ -f /tmp/gttk_error.log ]
 	then
 		rm -f /tmp/gttk_error.log
@@ -496,43 +497,44 @@ function CommitPO {
 }
 
 function gttk_menu {
-echo -e
-echo -e "1. Actualizar todos los módulos descargados\n"
-echo -e "2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
-echo -e "3. Subir traducciones de Gimp Help\n"
-echo -e "4. Subir traducciones (IGU y documentación) al repositorio\n"
-read -p "Opción: " OPCION
-echo
+	echo -e
+	echo -e "1. Actualizar todos los módulos descargados\n"
+	echo -e "2. Cambiar todos los módulos a la rama «master», eliminando el resto de ramas\n"
+	echo -e "3. Subir traducciones de Gimp Help\n"
+	echo -e "4. Subir traducciones (IGU y documentación) al repositorio\n"
+	read -p "Opción: " OPCION
+	echo
 
-case $OPCION in
-	# Actualizar todos las módulos
-	1 )
-		UpdateAll
-	;;
+	case $OPCION in
+		# Actualizar todos las módulos
+		1 )
+			UpdateAll
+		;;
 
-	# Cambiar todos los módulos a la rama «master»
-	2 )
-		ChangeToMasterClean
-	;;
+		# Cambiar todos los módulos a la rama «master»
+		2 )
+			ChangeToMasterClean
+		;;
 
-	# Subir traducciones de la documentación de GIMP
-	3 )
-		CommitGimpHelp
-	;;
-
-	# Subir archivos .PO de la interfaz (GUI) al repositorio
-	4 )
-		CommitPO
-	;;
-esac
+		# Subir traducciones de la documentación de GIMP
+		3 )
+			CommitGimpHelp
+		;;
+	
+		# Subir archivos .PO de la interfaz (GUI) al repositorio
+		4 )
+			CommitPO
+		;;
+	esac
 }
 
 function gttk_help {
-echo -e "\nModo de uso:"
-echo -e "\t./gttk.sh (sin argumentos): sube todos los archivos PO, incluídos los de Gimp-help"
-echo -e "\nArgumentos:\n"
-echo -e "\t\e[1;32m --menu\t\e[0m muestra el menú de opciones"
-echo -e "\t\e[1;32m --help\t\e[0m muestra este mensaje de ayuda\n"
+
+	echo -e "\nModo de uso:"
+	echo -e "\t./gttk.sh (sin argumentos): sube todos los archivos PO, incluídos los de Gimp-help"
+	echo -e "\nArgumentos:\n"
+	echo -e	"\t\e[1;32m --menu\t\e[0m muestra el menú de opciones"
+	echo -e "\t\e[1;32m --help\t\e[0m muestra este mensaje de ayuda\n"
 }
 
 #####################
