@@ -131,7 +131,7 @@ function CommitGimpHelp {
 	done
 
 	git config user.email "daniel.mustieles@gmail.com"
-        git commit -a -m "Updated Spanish translation" > /dev/null 2>&1
+        git commit -a -m "Updated Spanish translation" --author "Rodrigo Lledó <rodhos@gmail.com>"> /dev/null 2>&1
 
 	# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
 	if [ $? -eq 0 ]
@@ -283,6 +283,12 @@ function SelectFolders {
 		if [ $nombre == "locations" ]
                 then
                         PO_FOLDER="libgweather/po-locations"
+                        return
+                fi
+
+		if [ $nombre == "fractal" ]
+                then
+                        PO_FOLDER="fractal/fractal-gtk/po"
                         return
                 fi
 
