@@ -36,6 +36,9 @@ GTTK_TRASH="$HOME/.local/share/Trash/files/"
 # Flag para comprobación de GTXML
 GTTK_XML_CHECK="FALSE"
 
+# Flag para comprobar si es HELP
+GTTK_PO_HELP="FALSE"
+
 # Flags para la función de registro de errores
 GTTK_ERROR="FALSE"
 GTTK_CURL_ERROR="FALSE"
@@ -72,6 +75,38 @@ function UpdateAll {
 			cd ..
 		fi
 	done
+}
+
+function GitClone {
+	tput sc
+	printf "\e[3m\e[36mDescargando módulo...\e[0m"
+	GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$MODULE_NAME | jq -r .vcs_root`
+
+	# Error al acceder a la API. Puede que DL esté caído
+	if [ $? -ne 0 ]
+	then
+	tput rc
+	tput el
+	echo -e "Error de curl: \t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
+	GTTK_ERROR="TRUE"
+ 	GTTK_CURL_ERROR="TRUE"
+
+	return
+	fi
+
+	git clone $GTTK_GIT_URL > /dev/null 2>&1
+
+	if [ $? -ne 0 ]
+	then
+	tput rc
+	tput el
+	echo -e "Error en clone:\t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
+	GTTK_ERROR="TRUE"
+
+	return
+	fi
+	tput rc
+	tput el
 }
 
 
@@ -132,7 +167,7 @@ function CommitGimpHelp {
 	done
 
 	git config user.email "daniel.mustieles@gmail.com"
-        git commit -a -m "Updated Spanish translation" --author "Rodrigo Lledó <rodhos@gmail.com>"> /dev/null 2>&1
+        git commit -a -m "Updated Spanish translation" /dev/null 2>&1
 
 	# Si al hacer el commit hay algún error, no hago el push y devuelvo un error
 	if [ $? -eq 0 ]
@@ -167,7 +202,7 @@ function ChangeToMasterClean {
 			then
 				# Si hay más de una rama, me sitúo en «master»
 				git checkout master > /dev/null 2>&1
-				echo -e "\e[1;32m $i \e[0m"
+				Cecho -e "\e[1;32m $i \e[0m"
 
 				# Obtengo todas las ramas descargadas, quito el «*» a la rama actual («master») y las elimino
 				RAMAS=`git branch |sed 's/\*//'|grep -v master`
@@ -185,6 +220,44 @@ function ChangeToMasterClean {
 }
 
 
+function CheckSeveralHelpFolders {
+
+	MODULE_NAME=$1
+
+	echo -e "Actualizando-HELP:\t \e[1;32m $MODULE_NAME-help \e[0m(\e[37m$rama\e[0m)"
+
+	# Si no existe la carpeta del módulo, intento descargarla de git. Si no existe en git, devuelve un error y sale de la funcion
+	if [ ! -d $MODULE_NAME ]
+	then
+		GitClone
+	fi
+
+	# Si hay varias carpetas, se aborta el proceso, por seguridad.
+
+	# Variable auxiliar para definir el patrón que se debe excluir al contar los archivos PO
+	GTTK_PATTERN="po/$GTTK_LANG.po"
+
+	help_count=`find $MODULE_NAME -iname "$GTTK_LANG.po" |egrep -v $GTTK_PATTERN |wc -l`
+
+	if [ $help_count -gt 1 ]
+	then
+		echo -e "Error en $MODULE_NAME: \e[1;31m Demasiados archivos PO\e[0m" |tee -a /tmp/gttk_error.log
+		GTTK_ERROR="TRUE"
+
+	else
+		# Si sólo hay una carpeta, devuelvo la ruta y puedo subir el archivo
+		PO_FOLDER=`dirname $(find $MODULE_NAME -iname "$GTTK_LANG.po" |egrep -v $GTTK_PATTERN) 2>&1`
+
+		if [ $? -eq 1 ]
+		then
+			# Si dirname falla, salto el módulo y da un error al hacer el commit.
+			PO_FOLDER=""
+			return
+		fi
+		return
+	fi
+}
+
 # Función auxiliar para seleccionar la carpeta del módulo. Distingue entre IGU y documentación, así como los casos especiales.
 function SelectFolders {
 
@@ -199,82 +272,25 @@ function SelectFolders {
 
 	if [ $? -eq 0 ]
 	then
+		GTTK_PO_HELP="TRUE"
+
 		# Si es un módulo de documentación, activamos el flag para realizar posteriormente la comprobación del archivo con gtmxl
 		GTTK_XML_CHECK="TRUE"
 
 		# Obtengo el nombre del módulo objetivo
-		modulo_help=`echo $nombre| awk -F "-help" {'print $1'}`
+		MODULE_NAME=`echo $nombre| awk -F "-help" {'print $1'}`
+		PO_FOLDER=$MODULE_NAME
 
 		# Primero miro si se trata del módulo gnome-help, que forma parte de gnome-user-docs
-		if [ $modulo_help == "gnome" ]
+		if [ $MODULE_NAME == "gnome" ]
 		then
 			PO_FOLDER="gnome-user-docs/gnome-help/es/"
 			return
 		fi
 
-		# Si no existe el módulo, lo clono.
-		if [ ! -d $modulo_help ]
-		then
-			echo -e "Actualizando:\t \e[1;32m $modulo_help \e[0m"
-			tput sc
-			printf "\e[3m\e[36mDescargando módulo...\e[0m"
-			GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$modulo_help | jq -r .vcs_root`
+		CheckSeveralHelpFolders $MODULE_NAME
 
-			# Error al acceder a la API. Puede que DL esté caído
-			if [ $? -ne 0 ]
-			then
-				tput rc
-				tput el
-				echo -e "Error de curl: \t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
-				GTTK_ERROR="TRUE"
-				GTTK_CURL_ERROR="TRUE"
-				return
-			fi
 
-			git clone $GTTK_GIT_URL  > /dev/null 2>&1
-
-			if [ $? -ne 0 ]
-			then
-				tput rc
-				tput el
-				echo -e "Error en clone:\t \e[1;31m $modulo_help \e[0m" |tee -a /tmp/gttk_error.log
-				GTTK_ERROR="TRUE"
-				echo
-
-				PO_FOLDER=""
-				return
-			fi
-			tput rc
-			tput el
-		fi
-
-		if [ -d $modulo_help ]
-		then
-			# Si hay varias carpetas, se aborta el proceso, por seguridad.
-
-			# Variable auxiliar para definir el patrón que se debe excluir al contar los archivos PO
-			GTTK_PATTERN="po/$GTTK_LANG.po"
-
-			help_count=`find $modulo_help -iname "$GTTK_LANG.po" |egrep -v $GTTK_PATTERN |wc -l`
-
-			if [ $help_count -gt 1 ]
-			then
-				echo -e "Error en $modulo_help: \e[1;31m Demasiados archivos PO\e[0m" |tee -a /tmp/gttk_error.log
-				GTTK_ERROR="TRUE"
-			
-			else
-				# Si sólo hay una carpeta, devuelvo la ruta y puedo subir el archivo
-				PO_FOLDER=`dirname $(find $modulo_help -iname "$GTTK_LANG.po" |egrep -v $GTTK_PATTERN) 2>&1`
-
-				if [ $? -eq 1 ]
-				then
-					# Si dirname falla, salto el módulo y da un error al hacer el commit.
-					PO_FOLDER=""
-					return
-				fi
-				return
-			fi
-		fi	
 	else 
 	# No tiene la coletilla "-help" en el nombre. Si no es un archivo de la interfaz, es de los casos especiales de documentación
 
@@ -351,9 +367,18 @@ function SelectFolders {
 				return
 			fi
 		done
+
+#		MODULE_NAME=`echo $PO_FOLDER | awk -F "/" {'print $1'}`
+#
+#		# Ya sé la carpeta del módulo ya la del archivo PO. Actualizo el módulo y si no existe, lo clono
+#		echo -e "Actualizando:\t \e[1;32m $MODULE_NAME \e[0m(\e[37m$rama\e[0m)"
+#
+#		if [ ! -d $MODULE_FOLDER ]
+#		then
+#			GitClone
+#		fi
 	fi
 }
-
 
 # Función para seleccionar la rama correspondiente al módulo
 function SelectBranch {
@@ -390,35 +415,7 @@ function UploadModule {
 	# Si no existe la carpeta del módulo, intento descargarla de git. Si no existe en git, devuelve un error y sale de la funcion
 	if [ ! -d $MODULE_FOLDER ]
 	then
-		tput sc
-		printf "\e[3m\e[36mDescargando módulo...\e[0m"
-		GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$MODULE_NAME | jq -r .vcs_root > /dev/null 2>&1`
-		
-		# Error al acceder a la API. Puede que DL esté caído
-		if [ $? -ne 0 ]
-		then
-			tput rc
-                        tput el
-			echo -e "Error de curl: \t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
-			GTTK_ERROR="TRUE"
-			GTTK_CURL_ERROR="TRUE"
-
-			return
-		fi
-
-		git clone $GTTK_GIT_URL > /dev/null 2>&1
-
-		if [ $? -ne 0 ]
-		then
-			tput rc
-			tput el
-			echo -e "Error en clone:\t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
-			GTTK_ERROR="TRUE"
-
-			return
-		fi
-		tput rc
-		tput el
+		GitClone
 	fi
 
 	cd $MODULE_FOLDER
@@ -427,7 +424,6 @@ function UploadModule {
 
 	# Antes de hacer el pull, compruebo que los archivos no son iguales, para evitar un error en el commit
 	diff $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $MODULE_FOLDER/$GTTK_LANG.po  > /dev/null 2>&1
-
 	if [ $? -eq 0 ]
 	then
 		echo -e "Error en diff:\t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
@@ -484,7 +480,8 @@ function UploadModule {
 				GTTK_ERROR="TRUE"
 			else
 				# Si no hay error en el push, puedo mover el PO original a la papelera
-				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $GTTK_TRASH
+#				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $GTTK_TRASH
+echo kk >/dev/null
 				
 			fi
 		else
@@ -516,7 +513,6 @@ function CommitPO {
 	for i in `ls -p $GTTK_UPLOAD | grep -v /`
 	do
 		SelectFolders
-
 		UploadModule $GTTK_GIT_CLONES/$PO_FOLDER $nombre
 	done
 
@@ -558,7 +554,7 @@ function gttk_menu {
 			CommitGimpHelp
 		;;
 	
-		# Subir archivos .PO de la interfaz (GUI) al repositorio
+		# Subir archivos PO al repositorio
 		4 )
 			CommitPO
 		;;
