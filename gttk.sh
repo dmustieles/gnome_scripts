@@ -36,8 +36,9 @@ GTTK_TRASH="$HOME/.local/share/Trash/files/"
 # Flag para comprobación de GTXML
 GTTK_XML_CHECK="FALSE"
 
-# Flag para la función de registro de errores
+# Flags para la función de registro de errores
 GTTK_ERROR="FALSE"
+GTTK_CURL_ERROR="FALSE"
 
 # Variables con nombres de módulos especiales para la documentación
 GTTK_GNOME_USER_DOCS="gnome-help system-admin-guide"
@@ -218,6 +219,18 @@ function SelectFolders {
 			tput sc
 			printf "\e[3m\e[36mDescargando módulo...\e[0m"
 			GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$modulo_help | jq -r .vcs_root`
+
+			# Error al acceder a la API. Puede que DL esté caído
+			if [ $? -ne 0 ]
+			then
+				tput rc
+				tput el
+				echo -e "Error de curl: \t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
+				GTTK_ERROR="TRUE"
+				GTTK_CURL_ERROR="TRUE"
+				return
+			fi
+
 			git clone $GTTK_GIT_URL  > /dev/null 2>&1
 
 			if [ $? -ne 0 ]
@@ -379,7 +392,20 @@ function UploadModule {
 	then
 		tput sc
 		printf "\e[3m\e[36mDescargando módulo...\e[0m"
-		GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$MODULE_NAME | jq -r .vcs_root`
+		GTTK_GIT_URL=`curl -s https://l10n.gnome.org/api/v1/modules/$MODULE_NAME | jq -r .vcs_root > /dev/null 2>&1`
+		
+		# Error al acceder a la API. Puede que DL esté caído
+		if [ $? -ne 0 ]
+		then
+			tput rc
+                        tput el
+			echo -e "Error de curl: \t \e[1;31m $MODULE_NAME \e[0m\n" |tee -a /tmp/gttk_error.log
+			GTTK_ERROR="TRUE"
+			GTTK_CURL_ERROR="TRUE"
+
+			return
+		fi
+
 		git clone $GTTK_GIT_URL > /dev/null 2>&1
 
 		if [ $? -ne 0 ]
@@ -496,10 +522,15 @@ function CommitPO {
 
 	echo
 
+	if [ $GTTK_CURL_ERROR == "TRUE" ]
+	then
+		echo -e "\033[5;7;31m====== ES POSIBLE QUE DAMNED LIES ESTÉ CAÍDO ======\033[0m\n"
+	fi
+
 	if [ $GTTK_ERROR == "TRUE" ]
 	then
 		echo -e "Se han encontrado errores al subir las traducciones. Consulte el informe de error en /tmp/gttk_error.log\n"
-	fi
+	fi	
 }
 
 function gttk_menu {
