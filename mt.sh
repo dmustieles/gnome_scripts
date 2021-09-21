@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RELEASE="gnome-3-18"
+RELEASE="gnome-3-41"
 DL_URL="https://l10n.gnome.org/languages/es"
 WGET_OPTS="wget --no-check-certificate -q"
 
@@ -31,6 +31,5 @@ $WGET_OPTS $DL_URL/gnome-gimp/doc.tar.gz -O gimp-doc.tar.gz; tar -zxf gimp-doc.t
 $WGET_OPTS $DL_URL/gnome-extras/ui.tar.gz -O extras-ui.tar.gz; tar -zxf extras-ui.tar.gz; rm extras-ui.tar.gz
 $WGET_OPTS $DL_URL/gnome-extras/doc.tar.gz -O extras-doc.tar.gz; tar -zxf extras-doc.tar.gz; rm extras-doc.tar.gz
 
-
-
-
+$WGET_OPTS $DL_URL/gnome-extras-stable/ui.tar.gz -O extras-ui.tar.gz; tar -zxf extras-ui.tar.gz; rm extras-ui.tar.gz
+$WGET_OPTS $DL_URL/gnome-extras-stable/doc.tar.gz -O extras-doc.tar.gz; tar -zxf extras-doc.tar.gz; rm extras-doc.tar.gz

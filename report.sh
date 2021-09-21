@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-RELEASE="gnome-3-34"
+RELEASE="gnome-41"
 DL_URL="https://l10n.gnome.org/languages"
 WGET_OPTS="wget --no-check-certificate -q"
 REPORTS_DIR="gtxml-doc-reports"
