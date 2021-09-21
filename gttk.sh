@@ -45,7 +45,6 @@ GTTK_CURL_ERROR="FALSE"
 
 # Variables con nombres de módulos especiales para la documentación
 GTTK_GNOME_USER_DOCS="gnome-help system-admin-guide"
-GTTK_GNOME_DEVEL_DOCS="accessibility-devel-guide hig integration-guide optimization-guide platform-demos platform-overview programming-guidelines"
 GTTK_GNOME_APPLETS="battstat char-palette stickynotes trashapplet accessx-status invest-applet multiload drivemount geyes cpufreq charpick gweather mixer command-line"
 GTTK_GNOME_SYSTEM_TOOLS="network users shares services time"
 GTTK_GNOME_PANEL="clock fish"
@@ -224,8 +223,6 @@ function CheckSeveralHelpFolders {
 
 	MODULE_NAME=$1
 
-	echo -e "Actualizando-HELP:\t \e[1;32m $MODULE_NAME-help \e[0m(\e[37m$rama\e[0m)"
-
 	# Si no existe la carpeta del módulo, intento descargarla de git. Si no existe en git, devuelve un error y sale de la funcion
 	if [ ! -d $MODULE_NAME ]
 	then
@@ -321,6 +318,12 @@ function SelectFolders {
                         return
                 fi
 
+		if [ $nombre == "gnome-connections" ]
+                then
+                        PO_FOLDER="connections/po"
+                        return
+                fi
+
 
 		for modulo_user_docs in $GTTK_GNOME_USER_DOCS
 		do
@@ -331,14 +334,6 @@ function SelectFolders {
 			fi
 		done
 
-		for modulo_devel_docs in $GTTK_GNOME_DEVEL_DOCS
-		do
-			if [ $modulo_devel_docs == $nombre ]
-			then
-				PO_FOLDER="gnome-devel-docs/$modulo_devel_docs/es"
-				return
-			fi
-		done
 
 		for modulo_applets in $GTTK_GNOME_APPLETS
 		do
@@ -368,15 +363,6 @@ function SelectFolders {
 			fi
 		done
 
-#		MODULE_NAME=`echo $PO_FOLDER | awk -F "/" {'print $1'}`
-#
-#		# Ya sé la carpeta del módulo ya la del archivo PO. Actualizo el módulo y si no existe, lo clono
-#		echo -e "Actualizando:\t \e[1;32m $MODULE_NAME \e[0m(\e[37m$rama\e[0m)"
-#
-#		if [ ! -d $MODULE_FOLDER ]
-#		then
-#			GitClone
-#		fi
 	fi
 }
 
@@ -480,8 +466,7 @@ function UploadModule {
 				GTTK_ERROR="TRUE"
 			else
 				# Si no hay error en el push, puedo mover el PO original a la papelera
-#				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $GTTK_TRASH
-echo kk >/dev/null
+				mv $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $GTTK_TRASH
 				
 			fi
 		else
