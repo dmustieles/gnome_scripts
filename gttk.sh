@@ -45,6 +45,7 @@ GTTK_CURL_ERROR="FALSE"
 
 # Variables con nombres de módulos especiales para la documentación
 GTTK_GNOME_USER_DOCS="gnome-help system-admin-guide"
+GTTK_GNOME_DEVEL_DOCS="accessibility-devel-guide hig integration-guide optimization-guide platform-demos platform-overview programming-guidelines"
 GTTK_GNOME_APPLETS="battstat char-palette stickynotes trashapplet accessx-status invest-applet multiload drivemount geyes cpufreq charpick gweather mixer command-line"
 GTTK_GNOME_SYSTEM_TOOLS="network users shares services time"
 GTTK_GNOME_PANEL="clock fish"
@@ -318,13 +319,6 @@ function SelectFolders {
                         return
                 fi
 
-		if [ $nombre == "gnome-connections" ]
-                then
-                        PO_FOLDER="connections/po"
-                        return
-                fi
-
-
 		for modulo_user_docs in $GTTK_GNOME_USER_DOCS
 		do
 			if [ $modulo_user_docs == $nombre ]
@@ -334,6 +328,14 @@ function SelectFolders {
 			fi
 		done
 
+		for modulo_devel_docs in $GTTK_GNOME_DEVEL_DOCS
+		do
+			if [ $modulo_devel_docs == $nombre ]
+			then
+				PO_FOLDER="gnome-devel-docs/$modulo_devel_docs/es"
+				return
+			fi
+		done
 
 		for modulo_applets in $GTTK_GNOME_APPLETS
 		do
@@ -451,6 +453,7 @@ function UploadModule {
 		cp $GTTK_UPLOAD/$MODULE_NAME.$rama.$GTTK_LANG.po $MODULE_FOLDER/$GTTK_LANG.po
 
 		git config user.email "daniel.mustieles@gmail.com"
+		git add $MODULE_FOLDER/$GTTK_LANG.po
 		git commit $GTTK_LANG.po -m "Updated Spanish translation" > /dev/null 2>&1
 #		head -n1 $MODULE_FOLDER/$GTTK_LANG.po
 
